@@ -306,23 +306,63 @@ const { mutate, isLoading, progress } = api.mutation<User, FormData>('/users/upl
 | Property | Type | Description |
 |---|---|---|
 | `data` | `T \| null` | Aggregated items. |
-| `fetchNextPage`| `() => Promise<void>` | Trigger fetch for next offset. |
+| `error` | `unknown` | Any encountered error. |
+| `isLoading` | `boolean` | Initial page request state. |
 | `hasNextPage`| `boolean` | More pages available. |
 | `isFetchingNextPage`| `boolean` | Fetching next page state. |
+| `fetchNextPage`| `() => Promise<void>` | Trigger fetch for next offset. |
+| `refetch` | `() => Promise<void>` | Reset state and trigger a fresh fetch from initial offset. |
+| `setData` | `(updater: T \| null \| ((prev: T \| null) => T \| null)) => void` | Manually update local cache data. |
+| `reset` | `() => void` | Reset all local states to initial values. |
 
 **Example:**
 ```tsx
-const { data, fetchNextPage, hasNextPage } = api.infinite<User[], number>(
-  '/users',
-  {
-    initialOffset: 0,
-    offsetKey: 'page',
-    setOffset: (lastItems, allItems, lastOffset) => {
-      return lastItems.length > 0 ? lastOffset + 1 : null
+import { createApi } from '@fajarmaulana/komerce-lp-helper'
+
+const api = createApi({ baseURL: 'https://api.example.com' })
+
+const UserList = () => {
+  const {
+    data: users,
+    error,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    refetch,
+  } = api.infinite<User[], number>(
+    '/users',
+    {
+      initialOffset: 1,
+      offsetKey: 'page',
+      setOffset: (lastItems, allItems, lastOffset) => {
+        // Return next offset (page) or null if there is no more data
+        return lastItems && lastItems.length >= 10 ? lastOffset + 1 : null
+      }
     }
-  }
-)
+  )
+
+  if (isLoading) return <p>Loading...</p>
+  if (error) return <p>Error loading users</p>
+
+  return (
+    <div>
+      <button onClick={refetch}>Refetch</button>
+      <ul>
+        {users?.map(user => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+      {hasNextPage && (
+        <button onClick={fetchNextPage} disabled={isFetchingNextPage}>
+          {isFetchingNextPage ? 'Loading more...' : 'Load More'}
+        </button>
+      )}
+    </div>
+  )
+}
 ```
+
 
 **4. `batch<T>(initialRequests?)`**
 Execute multiple API requests in parallel. 
@@ -437,6 +477,20 @@ Type-safe wrappers for `localStorage`.
 | `removeLocals` | `keys: string[]`          | Removes multiple items.                 |
 | `clearLocals`  |                           | Clears local storage.                   |
 
+#### Session Storage
+
+Type-safe wrappers for `sessionStorage`.
+
+| Function         | Parameters                | Description                             |
+| ---------------- | ------------------------- | --------------------------------------- |
+| `setSession`     | `key: string, value: T`   | Stores a value (JSON stringified).      |
+| `setSessions`    | `items: { key, value }[]` | Stores multiple values.                 |
+| `getSession`     | `key: string`             | Retrieves and parses a value.           |
+| `getSessions`    | `keys: string[]`          | Retrieves multiple values as an object. |
+| `removeSession`  | `key: string`             | Removes an item.                        |
+| `removeSessions` | `keys: string[]`          | Removes multiple items.                 |
+| `clearSessions`  |                           | Clears session storage.                 |
+
 #### File
 
 Helpers for file and blob manipulation.
@@ -507,6 +561,10 @@ numbers, symbols, no spaces).
 
 - `params`: `{ field_id, field_value, field_error }`
 
-## License
+## 👨‍💻 Author & Creator
 
-MIT
+* **Fajar Maulana** - *Initial Work & Creator* - [fajarmaulana-dev](https://github.com/fajarmaulana-dev)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

@@ -49,7 +49,7 @@
     "tsc-alias": "^1.8.16",
     "typescript": "^5.2.0"
   },
-  "author": "Fajar Maulana",
+  "author": "Fajar Maulana <fajarmaulana.dev@gmail.com> (https://github.com/fajarmaulana-dev)",
   "license": "MIT",
   "keywords": [
     "react",
